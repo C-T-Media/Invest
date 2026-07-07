@@ -46,7 +46,13 @@ export function AssetManager({ assets }: { assets: Asset[] }) {
   }
 
   async function handleDelete(id: string) {
-    await fetch(`/api/admin/assets/${id}`, { method: "DELETE" });
+    setError("");
+    const res = await fetch(`/api/admin/assets/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Löschen fehlgeschlagen.");
+      return;
+    }
     router.refresh();
   }
 

@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
 
   const uniqueAssetIds = [...new Set(assetIds.filter((id) => typeof id === "string"))];
 
+  const existing = await prisma.asset.count({ where: { id: { in: uniqueAssetIds } } });
+  if (existing !== uniqueAssetIds.length) {
+    return NextResponse.json(
+      { error: "Mindestens ein ausgewähltes Asset existiert nicht (mehr)." },
+      { status: 400 }
+    );
+  }
+
   const round = await prisma.votingRound.create({
     data: {
       title,

@@ -10,7 +10,8 @@ export async function GET(
   const user = await getCurrentUser();
   const round = await getRoundWithResults(id, user?.id);
 
-  if (!round) {
+  // Draft rounds are only visible to admins.
+  if (!round || (round.status === "DRAFT" && !user?.isAdmin)) {
     return NextResponse.json({ error: "Runde nicht gefunden." }, { status: 404 });
   }
 

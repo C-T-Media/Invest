@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { randomInt } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendLoginCodeEmail } from "@/lib/mailer";
 import { createSession } from "@/lib/session";
@@ -7,8 +8,10 @@ const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute between code requests
 const MAX_ATTEMPTS = 5;
 
+export class RateLimitError extends Error {}
+
 function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 export function isValidEmail(email: string) {
@@ -23,8 +26,13 @@ export async function requestLoginCode(rawEmail: string) {
     orderBy: { createdAt: "desc" },
   });
   if (recent) {
-    throw new Error("Bitte warte kurz, bevor du einen neuen Code anforderst.");
+    throw new RateLimitError("Bitte warte kurz, bevor du einen neuen Code anforderst.");
   }
+
+  // Purge this address's expired codes so the table doesn't grow unbounded.
+  await prisma.verificationCode.deleteMany({
+    where: { email, expiresAt: { lt: new Date() } },
+  });
 
   const code = generateCode();
   const codeHash = await bcrypt.hash(code, 10);

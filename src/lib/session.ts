@@ -23,6 +23,11 @@ export async function createSession(userId: string) {
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
   const sessionId = randomBytes(16).toString("hex");
 
+  // Purge this user's expired sessions so the table doesn't grow unbounded.
+  await prisma.session.deleteMany({
+    where: { userId, expiresAt: { lt: new Date() } },
+  });
+
   const token = await new SignJWT({ sub: userId, sid: sessionId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -93,7 +98,12 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     include: { user: true },
   });
 
-  if (!session || session.expiresAt < new Date() || session.userId !== userId) {
+  if (
+    !session ||
+    session.expiresAt < new Date() ||
+    session.userId !== userId ||
+    session.tokenHash !== hashToken(token)
+  ) {
     return null;
   }
 

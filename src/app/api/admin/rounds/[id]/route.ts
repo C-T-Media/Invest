@@ -27,16 +27,19 @@ export async function PATCH(
     });
   }
 
-  const round = await prisma.votingRound.update({
-    where: { id },
-    data: {
-      status,
-      startsAt: status === "OPEN" ? new Date() : undefined,
-      endsAt: status === "CLOSED" ? new Date() : undefined,
-    },
-  });
-
-  return NextResponse.json({ round });
+  try {
+    const round = await prisma.votingRound.update({
+      where: { id },
+      data: {
+        status,
+        startsAt: status === "OPEN" ? new Date() : undefined,
+        endsAt: status === "CLOSED" ? new Date() : undefined,
+      },
+    });
+    return NextResponse.json({ round });
+  } catch {
+    return NextResponse.json({ error: "Runde nicht gefunden." }, { status: 404 });
+  }
 }
 
 export async function DELETE(

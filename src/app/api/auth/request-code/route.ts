@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isValidEmail, requestLoginCode } from "@/lib/auth";
+import { isValidEmail, requestLoginCode, RateLimitError } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -12,8 +12,14 @@ export async function POST(request: NextRequest) {
   try {
     await requestLoginCode(email);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unbekannter Fehler.";
-    return NextResponse.json({ error: message }, { status: 429 });
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    }
+    console.error("request-code failed:", error);
+    return NextResponse.json(
+      { error: "Der Code konnte nicht gesendet werden. Bitte versuche es später erneut." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ ok: true });

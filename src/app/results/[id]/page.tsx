@@ -14,7 +14,8 @@ export default async function ResultDetailPage({
   const user = await getCurrentUser();
   const round = await getRoundWithResults(id, user?.id);
 
-  if (!round) notFound();
+  // Draft rounds are only visible to admins.
+  if (!round || (round.status === "DRAFT" && !user?.isAdmin)) notFound();
 
   return (
     <div className="flex flex-col gap-6">
