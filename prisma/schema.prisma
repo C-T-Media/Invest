@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AssetType {
+  ETF
+  STOCK
+  CRYPTO
+  BOND
+  COMMODITY
+  OTHER
+}
+
+enum RoundStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  codes    VerificationCode[]
+  sessions Session[]
+  votes    Vote[]
+}
+
+model VerificationCode {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+}
+
+model Asset {
+  id          String    @id @default(cuid())
+  name        String
+  ticker      String?
+  type        AssetType
+  description String?
+  createdAt   DateTime  @default(now())
+
+  roundOptions RoundOption[]
+}
+
+model VotingRound {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  status      RoundStatus @default(DRAFT)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  options RoundOption[]
+  votes   Vote[]
+}
+
+model RoundOption {
+  id      String @id @default(cuid())
+  roundId String
+  assetId String
+
+  round VotingRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  asset Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  votes Vote[]
+
+  @@unique([roundId, assetId])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  roundId   String
+  userId    String
+  optionId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  round  VotingRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  option RoundOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, userId])
+}
