@@ -7,7 +7,7 @@ Ein Admin-Bereich zeigt die ausgewertete Abstimmung im Backend an.
 ## Tech-Stack
 
 - **Next.js (App Router, TypeScript)** – Frontend & API-Routes in einer Codebasis
-- **Prisma + SQLite** – Datenhaltung in einer lokalen `dev.db`-Datei
+- **Prisma + PostgreSQL** – funktioniert mit jeder Postgres-Instanz (Neon, Supabase, lokal, …)
 - **E-Mail + Bestätigungscode** – Login ohne Passwort, 6-stelliger Code per Mail (10 Min. gültig)
 - **Nodemailer** – Mailversand; ohne SMTP-Konfiguration wird der Code stattdessen in die Server-Konsole geloggt (praktisch für lokale Entwicklung)
 
@@ -15,7 +15,7 @@ Ein Admin-Bereich zeigt die ausgewertete Abstimmung im Backend an.
 
 ```bash
 npm install
-cp .env.example .env   # anpassen: ADMIN_EMAILS, SESSION_SECRET, ggf. SMTP_*
+cp .env.example .env   # anpassen: DATABASE_URL, ADMIN_EMAILS, SESSION_SECRET, ggf. SMTP_*
 npx prisma migrate dev
 npm run db:seed        # legt Beispiel-Assets + eine offene Demo-Abstimmung an
 npm run dev
@@ -27,7 +27,7 @@ Die Seite läuft danach unter http://localhost:3000.
 
 | Variable | Bedeutung |
 |---|---|
-| `DATABASE_URL` | Pfad zur SQLite-Datei, Standard `file:./dev.db` |
+| `DATABASE_URL` | Postgres-Connection-String, z. B. von Neon oder Supabase |
 | `ADMIN_EMAILS` | Kommagetrennte Liste von E-Mail-Adressen mit Admin-Zugriff auf `/admin` |
 | `SESSION_SECRET` | Geheimer Schlüssel zum Signieren der Session-Cookies – **in Produktion unbedingt ändern** |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | SMTP-Zugangsdaten für den Mailversand. Ohne `SMTP_HOST` wird der Login-Code nur in die Konsole geloggt. |
@@ -59,11 +59,18 @@ npm run db:migrate  # Prisma-Migration ausführen
 npm run db:seed     # Beispieldaten einspielen
 ```
 
-## Deployment-Hinweise
+## Deployment auf Vercel (empfohlen)
 
-- SQLite eignet sich für den Start, ist aber an das Dateisystem gebunden – bei
-  Deployment auf Plattformen mit ephemeren Dateisystemen (z. B. Vercel) braucht
-  die `dev.db` einen persistenten Volume-Mount oder muss durch eine gehostete
-  Datenbank (z. B. Postgres) ersetzt werden.
-- Für den produktiven Mailversand SMTP-Zugangsdaten (z. B. von einem
-  Transactional-E-Mail-Anbieter) in `SMTP_*` hinterlegen.
+1. **Datenbank anlegen**: Kostenloses Postgres z. B. bei [Neon](https://neon.tech)
+   oder [Supabase](https://supabase.com) erstellen und den Connection-String kopieren.
+2. **Repo importieren**: Auf [vercel.com](https://vercel.com/new) das GitHub-Repo
+   importieren. Vercel erkennt Next.js automatisch; das Build-Script
+   (`vercel-build`) führt die Prisma-Migrationen bei jedem Deploy selbst aus.
+3. **Umgebungsvariablen setzen** (Project Settings → Environment Variables):
+   `DATABASE_URL`, `ADMIN_EMAILS`, `SESSION_SECRET` – und für echten Mailversand
+   die `SMTP_*`-Variablen.
+4. **Deploy** klicken. Fertig.
+
+Ohne SMTP-Konfiguration werden die Login-Codes in die Vercel-Function-Logs
+geschrieben (Dashboard → Deployment → Logs) – das reicht zum Testen, für echte
+Nutzer sollten SMTP-Zugangsdaten (z. B. Brevo, Resend, Mailgun) hinterlegt werden.
