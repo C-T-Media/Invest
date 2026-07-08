@@ -30,8 +30,13 @@ export default async function AdminPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-10">
-      <h1 className="text-2xl font-semibold">Admin</h1>
+    <div className="flex flex-col gap-6 pt-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Admin</h1>
+        <p style={{ color: "var(--muted)" }}>
+          Assets verwalten, Runden starten und Ergebnisse auswerten.
+        </p>
+      </div>
       <RoundManager assets={assets} rounds={serializedRounds} />
       <AssetManager assets={assets} />
     </div>

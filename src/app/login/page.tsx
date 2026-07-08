@@ -51,72 +51,82 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Anmelden</h1>
+    <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-6">
+      <div className="flex flex-col gap-1 text-center">
+        <h1 className="text-2xl font-bold tracking-tight">Anmelden</h1>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          Kein Passwort nötig – du bekommst einen Einmal-Code.
+        </p>
+      </div>
 
-      {step === "email" ? (
-        <form onSubmit={handleRequestCode} className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            E-Mail-Adresse
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-md border px-3 py-2"
-              style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-              placeholder="du@example.com"
-            />
-          </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            style={{ background: "var(--accent)" }}
-          >
-            Code anfordern
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyCode} className="flex flex-col gap-3">
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Wir haben einen 6-stelligen Code an <strong>{email}</strong> gesendet.
-          </p>
-          <label className="flex flex-col gap-1 text-sm">
-            Code
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="\d{6}"
-              maxLength={6}
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              className="rounded-md border px-3 py-2 tracking-widest text-center text-lg"
-              style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-              placeholder="123456"
-            />
-          </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={submitting || code.length !== 6}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            style={{ background: "var(--accent)" }}
-          >
-            Bestätigen
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep("email")}
-            className="text-sm underline self-start"
-            style={{ color: "var(--muted)" }}
-          >
-            Andere E-Mail-Adresse verwenden
-          </button>
-        </form>
-      )}
+      <div className="card p-6">
+        {step === "email" ? (
+          <form onSubmit={handleRequestCode} className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1.5 text-sm font-medium">
+              E-Mail-Adresse
+              <input
+                type="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input font-normal"
+                placeholder="du@example.com"
+              />
+            </label>
+            {error && (
+              <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+            )}
+            <button type="submit" disabled={submitting} className="btn-primary">
+              {submitting ? "Wird gesendet …" : "Code anfordern"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Wir haben einen 6-stelligen Code an{" "}
+              <strong style={{ color: "var(--foreground)" }}>{email}</strong> gesendet.
+            </p>
+            <label className="flex flex-col gap-1.5 text-sm font-medium">
+              Code
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                required
+                autoFocus
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                className="input text-center font-mono text-xl tracking-[0.5em]"
+                placeholder="······"
+              />
+            </label>
+            {error && (
+              <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={submitting || code.length !== 6}
+              className="btn-primary"
+            >
+              {submitting ? "Wird geprüft …" : "Bestätigen"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("email");
+                setCode("");
+                setError("");
+              }}
+              className="self-center text-sm underline underline-offset-2"
+              style={{ color: "var(--muted)" }}
+            >
+              Andere E-Mail-Adresse verwenden
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

@@ -18,6 +18,12 @@ type Round = {
   options: RoundOption[];
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Entwurf",
+  OPEN: "läuft",
+  CLOSED: "beendet",
+};
+
 export function RoundManager({
   assets,
   rounds,
@@ -76,49 +82,69 @@ export function RoundManager({
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">Abstimmungsrunden</h2>
+    <section className="card flex flex-col gap-5 p-5 sm:p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-bold tracking-tight">Abstimmungsrunden</h2>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          Neue Runden starten als Entwurf – es kann immer nur eine gleichzeitig offen sein.
+        </p>
+      </div>
 
-      <form onSubmit={handleCreate} className="flex flex-col gap-2 max-w-md">
+      <form onSubmit={handleCreate} className="flex flex-col gap-2.5">
         <input
           required
-          placeholder="Titel"
+          placeholder="Titel (z. B. Wohin fließen die nächsten 500 €?)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+          className="input text-sm"
         />
         <input
           placeholder="Beschreibung (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+          className="input text-sm"
         />
-        <fieldset className="flex flex-col gap-1 rounded-md border p-3" style={{ borderColor: "var(--border)" }}>
-          <legend className="text-xs px-1" style={{ color: "var(--muted)" }}>
+        <fieldset
+          className="flex flex-col gap-1.5 rounded-xl border p-3.5"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <legend className="px-1 text-xs font-medium" style={{ color: "var(--faint)" }}>
             Assets zur Auswahl (mind. 2)
           </legend>
+          {assets.length === 0 && (
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Lege zuerst unten Assets an.
+            </p>
+          )}
           {assets.map((asset) => (
-            <label key={asset.id} className="flex items-center gap-2 text-sm">
+            <label
+              key={asset.id}
+              className="flex cursor-pointer items-center gap-2.5 text-sm"
+            >
               <input
                 type="checkbox"
                 checked={selectedAssetIds.includes(asset.id)}
                 onChange={() => toggleAsset(asset.id)}
+                className="accent-[var(--accent)]"
               />
               {asset.name}
-              {asset.ticker ? ` (${asset.ticker})` : ""}
+              {asset.ticker && (
+                <span className="font-mono text-xs" style={{ color: "var(--faint)" }}>
+                  {asset.ticker}
+                </span>
+              )}
             </label>
           ))}
         </fieldset>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        )}
         <button
           type="submit"
           disabled={submitting || selectedAssetIds.length < 2 || !title}
-          className="self-start rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          style={{ background: "var(--accent)" }}
+          className="btn-primary self-start"
         >
-          Runde anlegen (als Entwurf)
+          Runde anlegen
         </button>
       </form>
 
@@ -128,21 +154,34 @@ export function RoundManager({
           return (
             <li
               key={round.id}
-              className="rounded-md border p-3 flex flex-col gap-2"
+              className="flex flex-col gap-3 rounded-xl border p-4"
               style={{ borderColor: "var(--border)" }}
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{round.title}</span>
-                <span className="text-xs uppercase" style={{ color: "var(--muted)" }}>
-                  {round.status} · {totalVotes} Stimmen
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">{round.title}</span>
+                <span className="flex items-center gap-2 text-xs" style={{ color: "var(--muted)" }}>
+                  <span
+                    className="chip"
+                    style={
+                      round.status === "OPEN"
+                        ? { background: "var(--success-soft)", color: "var(--success)" }
+                        : {
+                            background: "var(--background)",
+                            color: "var(--muted)",
+                            border: "1px solid var(--border)",
+                          }
+                    }
+                  >
+                    {STATUS_LABELS[round.status] ?? round.status}
+                  </span>
+                  {totalVotes} {totalVotes === 1 ? "Stimme" : "Stimmen"}
                 </span>
               </div>
-              <div className="flex gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
                 {round.status !== "OPEN" && (
                   <button
                     onClick={() => setStatus(round.id, "OPEN")}
-                    className="rounded px-2 py-1 text-white"
-                    style={{ background: "var(--accent)" }}
+                    className="btn-primary !px-3.5 !py-1.5 !text-xs"
                   >
                     Öffnen
                   </button>
@@ -150,15 +189,14 @@ export function RoundManager({
                 {round.status === "OPEN" && (
                   <button
                     onClick={() => setStatus(round.id, "CLOSED")}
-                    className="rounded border px-2 py-1"
-                    style={{ borderColor: "var(--border)" }}
+                    className="btn-secondary !px-3.5 !py-1.5 !text-xs"
                   >
                     Schließen
                   </button>
                 )}
                 <button
                   onClick={() => handleDeleteRound(round.id)}
-                  className="underline"
+                  className="text-xs underline underline-offset-2"
                   style={{ color: "var(--muted)" }}
                 >
                   Löschen

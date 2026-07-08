@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ResultsBars } from "@/components/ResultsBars";
+import { assetTypeLabel } from "@/lib/assetTypes";
 
 type OptionResult = {
   id: string;
@@ -60,79 +61,114 @@ export function VotingCard({
   const isOpen = round.status === "OPEN";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {isOpen && (
-        <div
-          className="rounded-lg border p-4 flex flex-col gap-3"
-          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-        >
+        <section className="card flex flex-col gap-4 p-5 sm:p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--faint)" }}>
+            Deine Stimme
+          </h2>
           {!isLoggedIn && (
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              <Link href="/login" className="underline font-medium" style={{ color: "var(--accent)" }}>
-                Melde dich mit deiner E-Mail-Adresse an
-              </Link>{" "}
-              um mitzustimmen.
-            </p>
+            <div
+              className="flex flex-col items-start gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between"
+              style={{ background: "var(--accent-soft)" }}
+            >
+              <p className="text-sm">
+                Melde dich mit deiner E-Mail-Adresse an, um mitzustimmen.
+              </p>
+              <Link href="/login" className="btn-primary !py-2 shrink-0">
+                Jetzt anmelden
+              </Link>
+            </div>
           )}
-          <fieldset className="flex flex-col gap-2" disabled={!isLoggedIn || submitting}>
-            {round.options.map((option) => (
-              <label
-                key={option.id}
-                className="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                style={{
-                  borderColor: selected === option.id ? "var(--accent)" : "var(--border)",
-                }}
-              >
-                <input
-                  type="radio"
-                  name="option"
-                  value={option.id}
-                  checked={selected === option.id}
-                  onChange={() => setSelected(option.id)}
-                  className="mt-1"
-                />
-                <span className="flex flex-col">
-                  <span className="font-medium">
-                    {option.asset.name}
-                    {option.asset.ticker ? ` (${option.asset.ticker})` : ""}
-                    <span
-                      className="ml-2 text-xs uppercase font-normal"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      {option.asset.type}
+          <fieldset
+            className="flex flex-col gap-2.5"
+            disabled={!isLoggedIn || submitting}
+          >
+            {round.options.map((option) => {
+              const isSelected = selected === option.id;
+              return (
+                <label
+                  key={option.id}
+                  className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-all ${
+                    isLoggedIn ? "hover:border-[var(--accent)]" : "cursor-default opacity-80"
+                  }`}
+                  style={{
+                    borderColor: isSelected ? "var(--accent)" : "var(--border)",
+                    background: isSelected ? "var(--accent-soft)" : "transparent",
+                    boxShadow: isSelected
+                      ? "0 0 0 1px var(--accent)"
+                      : "none",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="option"
+                    value={option.id}
+                    checked={isSelected}
+                    onChange={() => setSelected(option.id)}
+                    className="mt-1.5 accent-[var(--accent)]"
+                  />
+                  <span className="flex flex-1 flex-col gap-0.5">
+                    <span className="flex flex-wrap items-center gap-2 font-semibold">
+                      {option.asset.name}
+                      {option.asset.ticker && (
+                        <span
+                          className="font-mono text-xs font-medium"
+                          style={{ color: "var(--faint)" }}
+                        >
+                          {option.asset.ticker}
+                        </span>
+                      )}
+                      <span
+                        className="chip"
+                        style={{
+                          background: "var(--background)",
+                          color: "var(--muted)",
+                          border: "1px solid var(--border)",
+                        }}
+                      >
+                        {assetTypeLabel(option.asset.type)}
+                      </span>
                     </span>
+                    {option.asset.description && (
+                      <span className="text-sm" style={{ color: "var(--muted)" }}>
+                        {option.asset.description}
+                      </span>
+                    )}
                   </span>
-                  {option.asset.description && (
-                    <span className="text-sm" style={{ color: "var(--muted)" }}>
-                      {option.asset.description}
-                    </span>
-                  )}
-                </span>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </fieldset>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+          )}
           {isLoggedIn && (
             <button
               onClick={handleVote}
               disabled={!selected || submitting}
-              className="self-start rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              style={{ background: "var(--accent)" }}
+              className="btn-primary self-start"
             >
-              {round.myOptionId ? "Stimme ändern" : "Abstimmen"}
+              {submitting
+                ? "Wird gespeichert …"
+                : round.myOptionId
+                  ? "Stimme ändern"
+                  : "Abstimmen"}
             </button>
           )}
-        </div>
+        </section>
       )}
 
-      <div>
-        <h2 className="text-lg font-semibold mb-3">Zwischenstand</h2>
+      <section className="card flex flex-col gap-4 p-5 sm:p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--faint)" }}>
+          Zwischenstand
+        </h2>
         <ResultsBars
           options={round.options}
           myOptionId={round.myOptionId}
           totalVotes={round.totalVotes}
         />
-      </div>
+      </section>
     </div>
   );
 }

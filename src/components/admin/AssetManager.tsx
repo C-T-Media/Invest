@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ASSET_TYPE_LABELS, assetTypeLabel } from "@/lib/assetTypes";
 
 type Asset = {
   id: string;
@@ -10,8 +11,6 @@ type Asset = {
   type: string;
   description: string | null;
 };
-
-const ASSET_TYPES = ["ETF", "STOCK", "CRYPTO", "BOND", "COMMODITY", "OTHER"];
 
 export function AssetManager({ assets }: { assets: Asset[] }) {
   const router = useRouter();
@@ -57,35 +56,37 @@ export function AssetManager({ assets }: { assets: Asset[] }) {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">Assets</h2>
+    <section className="card flex flex-col gap-5 p-5 sm:p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-bold tracking-tight">Assets</h2>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          Die Anlagemöglichkeiten, aus denen Abstimmungsrunden zusammengestellt werden.
+        </p>
+      </div>
 
-      <form onSubmit={handleAdd} className="flex flex-col gap-2 max-w-md">
-        <div className="flex gap-2">
+      <form onSubmit={handleAdd} className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 sm:flex-row">
           <input
             required
-            placeholder="Name"
+            placeholder="Name (z. B. MSCI World ETF)"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="flex-1 rounded-md border px-3 py-2 text-sm"
-            style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+            className="input flex-1 text-sm"
           />
           <input
-            placeholder="Ticker (optional)"
+            placeholder="Ticker"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
-            className="w-32 rounded-md border px-3 py-2 text-sm"
-            style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+            className="input w-full sm:w-28 text-sm"
           />
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="rounded-md border px-3 py-2 text-sm"
-            style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+            className="input text-sm"
           >
-            {ASSET_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
@@ -94,35 +95,44 @@ export function AssetManager({ assets }: { assets: Asset[] }) {
           placeholder="Beschreibung (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+          className="input text-sm"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="self-start rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          style={{ background: "var(--accent)" }}
-        >
+        {error && (
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        )}
+        <button type="submit" disabled={submitting} className="btn-primary self-start">
           Asset hinzufügen
         </button>
       </form>
 
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col divide-y" style={{ borderColor: "var(--border)" }}>
         {assets.map((asset) => (
           <li
             key={asset.id}
-            className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-3 py-3 text-sm"
             style={{ borderColor: "var(--border)" }}
           >
-            <span>
-              {asset.name}
-              {asset.ticker ? ` (${asset.ticker})` : ""}{" "}
-              <span style={{ color: "var(--muted)" }}>· {asset.type}</span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="font-medium">{asset.name}</span>
+              {asset.ticker && (
+                <span className="font-mono text-xs" style={{ color: "var(--faint)" }}>
+                  {asset.ticker}
+                </span>
+              )}
+              <span
+                className="chip"
+                style={{
+                  background: "var(--background)",
+                  color: "var(--muted)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                {assetTypeLabel(asset.type)}
+              </span>
             </span>
             <button
               onClick={() => handleDelete(asset.id)}
-              className="text-xs underline"
+              className="shrink-0 text-xs underline underline-offset-2"
               style={{ color: "var(--muted)" }}
             >
               Löschen
