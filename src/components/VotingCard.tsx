@@ -38,6 +38,14 @@ export function VotingCard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Re-sync the selection when the server sends fresh round data (e.g. after
+  // router.refresh() or a session change) so SSR and client never diverge.
+  const [prevMyOptionId, setPrevMyOptionId] = useState(round.myOptionId);
+  if (prevMyOptionId !== round.myOptionId) {
+    setPrevMyOptionId(round.myOptionId);
+    setSelected(round.myOptionId ?? "");
+  }
+
   async function handleVote() {
     if (!selected) return;
     setSubmitting(true);
