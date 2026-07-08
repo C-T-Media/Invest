@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ResultsBars } from "@/components/ResultsBars";
+import { SuggestAssetForm } from "@/components/SuggestAssetForm";
 import { assetTypeLabel } from "@/lib/assetTypes";
 
 type OptionResult = {
@@ -163,6 +164,11 @@ export function VotingCard({
                   ? "Stimme ändern"
                   : "Abstimmen"}
             </button>
+          )}
+          {isLoggedIn && (
+            <div className="border-t pt-4" style={{ borderColor: "var(--border)" }}>
+              <SuggestAssetForm roundId={round.id} />
+            </div>
           )}
         </section>
       )}

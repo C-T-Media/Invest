@@ -42,6 +42,10 @@ Die Seite läuft danach unter http://localhost:3000.
   ihren Asset-Optionen angezeigt. Angemeldete Nutzer können pro Runde eine Stimme
   abgeben und sie beliebig ändern, solange die Runde offen ist (ein Vote pro
   Nutzer und Runde). Der Zwischenstand ist für alle sichtbar.
+- **Assets vorschlagen**: Angemeldete Nutzer können während einer offenen Runde
+  eigene Assets vorschlagen (max. 3 pro Person und Runde). Der Vorschlag erscheint
+  sofort als wählbare Option; Duplikate (gleicher Name oder Ticker) werden
+  abgelehnt. Gelöscht werden können Assets nur von Admins.
 - **Ergebnisse**: Unter `/results` gibt es eine Übersicht aller laufenden und
   beendeten Abstimmungen mit den jeweiligen Ergebnissen.
 - **Admin-Backend** (`/admin`, nur für `ADMIN_EMAILS`): Assets anlegen/löschen,

@@ -30,9 +30,10 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now())
 
-  codes    VerificationCode[]
-  sessions Session[]
-  votes    Vote[]
+  codes           VerificationCode[]
+  sessions        Session[]
+  votes           Vote[]
+  suggestedAssets Asset[]
 }
 
 model VerificationCode {
@@ -69,6 +70,9 @@ model Asset {
   type        AssetType
   description String?
   createdAt   DateTime  @default(now())
+
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
 
   roundOptions RoundOption[]
 }
